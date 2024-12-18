@@ -1,6 +1,6 @@
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
+import Authenticate from "./authenticate";
 
 export default function Header() {
   return (
@@ -43,39 +43,7 @@ export default function Header() {
               {/* <%= link_to 'ブランド', "#", class: "brand-list" %> */}
             </li>
           </ul>
-          <ul className='lists-right flex list-none items-end'>
-            {/* <% if user_signed_in? %> */}
-            <li>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-              {/* <%= link_to current_user.nickname, "#", class: "user-nickname" %> */}
-            </li>
-            <li>
-              {/* <%= link_to 'ログアウト', "/users/sign_out", method: :delete, class: "logout" %> */}
-            </li>
-            {/* <% else %> */}
-            <li>
-              <SignedOut>
-                <SignInButton>
-                  <button className="login no-underline text-[#333333] leading-[32px] mr-[3vw]">
-                    ログイン
-                  </button>
-                </SignInButton>
-              </SignedOut>
-              {/* <%= link_to 'ログイン', "/users/sign_in", class: "login" %> */}
-            </li>
-            <li>
-              <SignedOut>
-                <SignUpButton>
-                  <button className="sign-up no-underline text-[#333333]">
-                    新規登録
-                  </button>
-                </SignUpButton>
-              </SignedOut>
-              {/* <%= link_to '新規登録', "/users/sign_up", class: "sign-up" %> */}
-            </li>
-          </ul>
+          <Authenticate />
         </div>
       </header>
     </div>
