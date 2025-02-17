@@ -1,17 +1,19 @@
 'use client'
 
-import { createClerkSupabaseClient } from '@/supabaseClient';
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useSession, useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function Authenticate() {
   const { user } = useUser();
-  const supabase = createClerkSupabaseClient();
+  const { session } = useSession(); // クライアントサイドでセッションを取得
+  const router = useRouter();
 
   useEffect(() => {
     const saveUserToSupabase = async () => {
       if (user) {
         const { id, hashedPassword, firstName, lastName, nickname, firstNameKana, lastNameKana, birthday } = user as unknown as { id: string, hashedPassword: string, firstName: string, lastName: string, nickname: string, firstNameKana: string, lastNameKana: string, birthday: Date };
+
         // emailAddressesからメールアドレスを取得
         const email = user.emailAddresses[0]?.emailAddress; // 最初のメールアドレスを取得
 
@@ -20,23 +22,38 @@ export default function Authenticate() {
           return; // 処理を中断
         }
 
-        // Supabaseにユーザーデータを挿入
-        const { data, error } = await supabase
-          .from('User') // テーブル名をUserに変更
-          .upsert({
-            user_id: id, email, hashedPassword: hashedPassword || "未設定", firstName: firstName || "未設定", lastName: lastName || "未設定", nickname: nickname || "未設定", firstNameKana: firstNameKana || "未設定", lastNameKana: lastNameKana || "未設定", birthday: birthday || '1970-01-01'
-          });
+        // サーバーアクションを呼び出す
+        const response = await fetch('/api/saveUser', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: id,
+            email,
+            firstName,
+            lastName,
+            nickname,
+            firstNameKana,
+            lastNameKana,
+            birthday,
+            sessionToken: session?.getToken(), // セッション情報を送信
+          }),
+        });
 
-        if (error) {
-          console.error('ユーザーデータの挿入エラー:', error);
+        const result = await response.json();
+        if (result.ok) {
+          console.log('ユーザーデータがSupabaseに保存されました:', result.data);
+          // 詳細情報登録ページに遷移
+          router.push('/register-details');
         } else {
-          console.log('ユーザーデータがSupabaseに保存されました:', data);
+          console.error('ユーザーデータの挿入エラー:', result.error);
         }
       }
     };
 
     saveUserToSupabase();
-  }, [user]);
+  }, [user, session, router]);
 
   return (
     <div>
